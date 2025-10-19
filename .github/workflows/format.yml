@@ -1,0 +1,45 @@
+name: Format & Fix (dotnet-format)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x' # 根据你的项目版本调整
+
+      - name: Restore dotnet tools
+        run: |
+          dotnet tool restore || true
+
+      - name: Run dotnet format (check & fix)
+        run: |
+          dotnet tool install -g dotnet-format --version 6.* || true
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          dotnet format --folder --verbosity minimal
+
+      - name: Commit changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A || true
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: automated format via GitHub Actions" || true
+            git push origin HEAD:refs/heads/format-auto || true
+          else
+            echo "No formatting changes"
+          fi
