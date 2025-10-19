@@ -1,8 +1,9 @@
 <Project>
-  <!-- 把这个放在解决方案/仓库根，构建前运行 dotnet format（仅在设置 RunDotNetFormat=true 时启用） -->
+  <!-- 在项目/解决方案根放置此文件，会自动应用到子项目 -->
   <Target Name="RunDotNetFormat" BeforeTargets="BeforeBuild" Condition="'$(RunDotNetFormat)' == 'true'">
-    <Message Text="Running dotnet format on $(MSBuildProjectDirectory)" Importance="high" />
+    <!-- 如果仓库使用本地 tool manifest (dotnet tool restore) -->
     <Exec Command="dotnet tool restore" />
-    <Exec Command="dotnet format $(MSBuildProjectDirectory) --severity info" />
+    <!-- 在项目目录运行 dotnet format，会修改文件（如果需要仅验证可传 --verify-no-changes） -->
+    <Exec Command="dotnet format $(MSBuildProjectDirectory)" />
   </Target>
 </Project>

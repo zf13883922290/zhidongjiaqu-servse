@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Multi Timezone Digital Clock</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>Multi Timezone Digital Clock</h1>
+      <div class="controls">
+        <label class="toggle">
+          <input id="hourToggle" type="checkbox" />
+          <span id="toggleLabel">24-hour</span>
+        </label>
+      </div>
+    </header>
+
+    <section class="add-zone">
+      <input id="tzSearch" type="search" placeholder="Search timezones (e.g. Tokyo, New_York, Europe/London)" />
+      <select id="tzSelect" size="6" aria-label="Timezone list"></select>
+      <div class="add-buttons">
+        <button id="addBtn">Add timezone</button>
+        <button id="addLocalBtn">Add my local timezone</button>
+        <button id="clearBtn" title="Remove all">Clear all</button>
+      </div>
+    </section>
+
+    <section id="clocks" class="clocks" aria-live="polite">
+      <!-- timezone clock cards injected here -->
+    </section>
+
+    <footer class="footer">
+      <small>Uses browser Intl API. Works offline after first load.</small>
+    </footer>
+  </main>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
