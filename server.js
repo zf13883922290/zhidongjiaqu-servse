@@ -8,11 +8,18 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Rate limiting
-const limiter = rateLimit({
+// Rate limiting for API routes
+const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.'
+});
+
+// Rate limiting for static files (more permissive)
+const staticLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60, // Limit each IP to 60 requests per minute
+  message: 'Too many requests, please slow down.'
 });
 
 // Middleware
@@ -20,7 +27,7 @@ app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/api/', limiter); // Apply rate limiting to all API routes
+app.use('/api/', apiLimiter); // Apply rate limiting to all API routes
 
 // Serve static files (frontend)
 app.use(express.static(path.join(__dirname)));
@@ -53,8 +60,8 @@ app.use('/api/devices', require('./routes/devices'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/settings', require('./routes/settings'));
 
-// Serve frontend for all other routes
-app.get('*', (req, res) => {
+// Serve frontend for all other routes (with rate limiting)
+app.get('*', staticLimiter, (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
