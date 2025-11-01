@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const bcrypt = require('bcrypt');
 
 async function seedDatabase() {
   console.log('🌱 Seeding database...');
@@ -13,12 +14,16 @@ async function seedDatabase() {
       process.exit(0);
     }
     
+    // Hash passwords
+    const adminPassword = await bcrypt.hash('admin123', 10);
+    const testPassword = await bcrypt.hash('test123', 10);
+    
     // Insert sample users
     await db.query(`
       INSERT INTO users (username, email, password) VALUES
-        ('admin', 'admin@zhidongjiaqu.com', 'admin123'),
-        ('testuser', 'test@zhidongjiaqu.com', 'test123')
-    `);
+        ('admin', 'admin@zhidongjiaqu.com', $1),
+        ('testuser', 'test@zhidongjiaqu.com', $2)
+    `, [adminPassword, testPassword]);
     
     // Insert sample devices
     await db.query(`

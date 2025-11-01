@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const bcrypt = require('bcrypt');
+const { body, validationResult } = require('express-validator');
 
 // Get all users
 router.get('/', async (req, res) => {
@@ -46,12 +48,30 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new user
-router.post('/', async (req, res) => {
+router.post('/', [
+  body('username').notEmpty().trim().isLength({ min: 3, max: 100 }),
+  body('email').isEmail().normalizeEmail(),
+  body('password').isLength({ min: 6 })
+], async (req, res) => {
   try {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
     const { username, email, password } = req.body;
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
     const result = await db.query(
       'INSERT INTO users (username, email, password, created_at) VALUES ($1, $2, $3, NOW()) RETURNING id, username, email, created_at',
-      [username, email, password]
+      [username, email, hashedPassword]
     );
     
     res.status(201).json({
@@ -60,6 +80,12 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating user:', error);
+    if (error.code === '23505') { // Unique constraint violation
+      return res.status(409).json({
+        success: false,
+        error: 'Username or email already exists'
+      });
+    }
     res.status(500).json({
       success: false,
       error: 'Failed to create user'

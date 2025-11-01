@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const { body, param, validationResult } = require('express-validator');
 
 // Get all devices
 router.get('/', async (req, res) => {
@@ -46,8 +47,23 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new device
-router.post('/', async (req, res) => {
+router.post('/', [
+  body('name').notEmpty().trim().isLength({ max: 100 }),
+  body('type').notEmpty().trim().isLength({ max: 50 }),
+  body('status').optional().isIn(['online', 'offline', 'error']),
+  body('location').optional().trim().isLength({ max: 255 })
+], async (req, res) => {
   try {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
     const { name, type, status, location } = req.body;
     const result = await db.query(
       'INSERT INTO devices (name, type, status, location, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
@@ -68,8 +84,24 @@ router.post('/', async (req, res) => {
 });
 
 // Update device
-router.put('/:id', async (req, res) => {
+router.put('/:id', [
+  param('id').isInt({ min: 1 }),
+  body('name').notEmpty().trim().isLength({ max: 100 }),
+  body('type').notEmpty().trim().isLength({ max: 50 }),
+  body('status').optional().isIn(['online', 'offline', 'error']),
+  body('location').optional().trim().isLength({ max: 255 })
+], async (req, res) => {
   try {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
     const { id } = req.params;
     const { name, type, status, location } = req.body;
     

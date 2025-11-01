@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const { body, param, validationResult } = require('express-validator');
 
 // Get all settings
 router.get('/', async (req, res) => {
@@ -46,8 +47,22 @@ router.get('/:key', async (req, res) => {
 });
 
 // Update or create setting
-router.put('/:key', async (req, res) => {
+router.put('/:key', [
+  param('key').notEmpty().trim().isLength({ max: 100 }),
+  body('value').optional(),
+  body('description').optional().trim()
+], async (req, res) => {
   try {
+    // Validate input
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
     const { key } = req.params;
     const { value, description } = req.body;
     

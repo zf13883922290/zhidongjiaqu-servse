@@ -47,16 +47,25 @@ INSERT INTO settings (key, value, description) VALUES
 ON CONFLICT (key) DO NOTHING;
 
 -- Insert sample data for testing
+-- Note: In production, passwords should be hashed by the application
+-- These are only for initial testing and should be changed immediately
 INSERT INTO users (username, email, password) VALUES
-    ('admin', 'admin@zhidongjiaqu.com', 'admin123'),
-    ('user1', 'user1@zhidongjiaqu.com', 'user123')
+    ('admin', 'admin@zhidongjiaqu.com', '$2b$10$XQxY8QQZ4X4X4X4X4X4X4OqKqKqKqKqKqKqKqKqKqKqKqKqKqKqK'), -- Placeholder hash
+    ('user1', 'user1@zhidongjiaqu.com', '$2b$10$XQxY8QQZ4X4X4X4X4X4X4OqKqKqKqKqKqKqKqKqKqKqKqKqKqKqK')  -- Placeholder hash
 ON CONFLICT (username) DO NOTHING;
 
-INSERT INTO devices (name, type, status, location) VALUES
-    ('客厅灯', 'light', 'online', '客厅'),
-    ('空调', 'air_conditioner', 'offline', '卧室'),
-    ('智能门锁', 'smart_lock', 'online', '门口')
-ON CONFLICT DO NOTHING;
+-- Insert sample devices (no conflict possible without unique constraint besides id)
+INSERT INTO devices (name, type, status, location) 
+SELECT '客厅灯', 'light', 'online', '客厅'
+WHERE NOT EXISTS (SELECT 1 FROM devices WHERE name = '客厅灯');
+
+INSERT INTO devices (name, type, status, location) 
+SELECT '空调', 'air_conditioner', 'offline', '卧室'
+WHERE NOT EXISTS (SELECT 1 FROM devices WHERE name = '空调');
+
+INSERT INTO devices (name, type, status, location) 
+SELECT '智能门锁', 'smart_lock', 'online', '门口'
+WHERE NOT EXISTS (SELECT 1 FROM devices WHERE name = '智能门锁');
 
 -- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
